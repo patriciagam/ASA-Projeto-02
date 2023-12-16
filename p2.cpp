@@ -5,35 +5,38 @@
 
 using namespace std;
 
-void dfs1(int node, const vector<vector<int>>& graph, vector<bool>& visited, stack<int>& st) {
+// Depth-First Search in the forward direction
+void dfsForward(int node, const vector<vector<int>>& graph, vector<bool>& visited, stack<int>& st) {
     visited[node] = true;
 
     for (int neighbor : graph[node]) {
         if (!visited[neighbor]) {
-            dfs1(neighbor, graph, visited, st);
+            dfsForward(neighbor, graph, visited, st);
         }
     }
 
     st.push(node);
 }
 
-void dfs2(int node, const vector<vector<int>>& reversedGraph, vector<bool>& visited, vector<int>& scc, int sccNumber) {
+// DFS in the backward direction to assign Strongly Connected Components
+void dfsBackward(int node, const vector<vector<int>>& reversedGraph, vector<bool>& visited, vector<int>& scc, int sccNumber) {
     visited[node] = true;
     scc[node] = sccNumber;
 
     for (int neighbor : reversedGraph[node]) {
         if (!visited[neighbor]) {
-            dfs2(neighbor, reversedGraph, visited, scc, sccNumber);
+            dfsBackward(neighbor, reversedGraph, visited, scc, sccNumber);
         }
     }
 }
 
-vector<vector<int>> compressSCCs(int n, const vector<pair<int, int>>& relationships, const vector<int>& scc) {
+// Compress SCCs into a new graph
+vector<vector<int>> compressSCCs(int n, const vector<pair<int, int>>& edges, const vector<int>& scc) {
     vector<vector<int>> compressedGraph(n + 1);
 
-    for (const auto& rel : relationships) {
-        int x = rel.first;
-        int y = rel.second;
+    for (const auto& edge : edges) {
+        int x = edge.first;
+        int y = edge.second;
         int sccX = scc[x];
         int sccY = scc[y];
 
@@ -45,13 +48,14 @@ vector<vector<int>> compressSCCs(int n, const vector<pair<int, int>>& relationsh
     return compressedGraph;
 }
 
-vector<vector<int>> findSCCs(int n, const vector<pair<int, int>>& relationships, vector<int>& scc) {
+// Find SCCs in the graph
+vector<vector<int>> findSCCs(int n, const vector<pair<int, int>>& edges, vector<int>& scc) {
     vector<vector<int>> graph(n + 1);
     vector<vector<int>> reversedGraph(n + 1);
 
-    for (const auto& rel : relationships) {
-        int x = rel.first;
-        int y = rel.second;
+    for (const auto& edge : edges) {
+        int x = edge.first;
+        int y = edge.second;
         graph[x].push_back(y);
         reversedGraph[y].push_back(x);
     }
@@ -61,7 +65,7 @@ vector<vector<int>> findSCCs(int n, const vector<pair<int, int>>& relationships,
 
     for (int i = 1; i <= n; ++i) {
         if (!visited[i]) {
-            dfs1(i, graph, visited, st);
+            dfsForward(i, graph, visited, st);
         }
     }
 
@@ -74,61 +78,61 @@ vector<vector<int>> findSCCs(int n, const vector<pair<int, int>>& relationships,
 
         if (!visited[node]) {
             ++sccNumber;
-            dfs2(node, reversedGraph, visited, scc, sccNumber);
+            dfsBackward(node, reversedGraph, visited, scc, sccNumber);
         }
     }
 
     // Return the compressed graph of SCCs
-    return compressSCCs(n, relationships, scc);
+    return compressSCCs(n, edges, scc);
 }
 
-
+// Recursive function to calculate maximum jumps from a given SCC
 int dfs(int node, const vector<vector<int>>& graph, vector<bool>& visited) {
     visited[node] = true;
 
-    int max_jumps = 0;
+    int maxJumps = 0;
 
     for (int neighbor : graph[node]) {
         if (!visited[neighbor]) {
             int jumps = 1 + dfs(neighbor, graph, visited);
-            max_jumps = max(max_jumps, jumps);
+            maxJumps = max(maxJumps, jumps);
         } else {
-            max_jumps = max(max_jumps, 1);
+            maxJumps = max(maxJumps, 1);
         }
     }
 
-    return max_jumps;
+    return maxJumps;
 }
 
-int calculateMaxJumps(int n, const vector<pair<int, int>>& relationships) {
+// Calculate the maximum jumps over all SCCs
+int calculateMaxJumps(int n, const vector<pair<int, int>>& edges) {
     vector<int> scc(n + 1, 0);
-    vector<vector<int>> sccGraph = findSCCs(n, relationships, scc);
+    vector<vector<int>> sccGraph = findSCCs(n, edges, scc);
 
     int sccCount = *max_element(scc.begin(), scc.end());
+    int maxJumps = 0;
 
-    int max_jumps = 0;
-
-    for (int start_scc = 1; start_scc <= sccCount; ++start_scc) {
+    for (int startSCC = 1; startSCC <= sccCount; ++startSCC) {
         vector<bool> visited(sccCount + 1, false);
-        max_jumps = max(max_jumps, dfs(start_scc, sccGraph, visited));
+        maxJumps = max(maxJumps, dfs(startSCC, sccGraph, visited));
     }
 
-    return max_jumps;
+    return maxJumps;
 }
 
 int main() {
     int n, m;
     scanf("%d %d", &n, &m);
 
-    vector<pair<int, int>> relationships(m);
+    vector<pair<int, int>> edges(m);
 
     for (int i = 0; i < m; ++i) {
-        scanf("%d %d", &relationships[i].first, &relationships[i].second);
+        scanf("%d %d", &edges[i].first, &edges[i].second);
     }
 
-    int result = calculateMaxJumps(n, relationships);
+    int result = calculateMaxJumps(n, edges);
 
     printf("%d\n", result);
-
+    
     return 0;
 }
