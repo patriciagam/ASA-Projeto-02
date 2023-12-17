@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <stack>
+#include <set>
 #include <vector>
 
 using namespace std;
@@ -72,10 +74,14 @@ void printGraph(const vector<vector<int>>& graph) {
 }
 
 // Compress SCCs into a new graph
+// Compress SCCs into a new graph
 vector<vector<int>> compressSCCs(int n, const vector<pair<int, int>>& edges,
                                  const vector<int>& scc) {
     // initialize graph as an empty adjacency list
     vector<vector<int>> compressedGraph(n + 1);
+
+    // Map to store the outgoing edges from each SCC
+    map<int, set<int>> outgoingEdges;
 
     for (const auto& edge : edges) {
         int x = edge.first;
@@ -86,7 +92,15 @@ vector<vector<int>> compressSCCs(int n, const vector<pair<int, int>>& edges,
 
         // if the nodes are in different SCCs, add an edge between the SCCs
         if (sccX != sccY) {
-            compressedGraph[sccX].push_back(sccY);
+            outgoingEdges[sccX].insert(sccY);
+        }
+    }
+
+    // Build the compressed graph
+    for (auto& entry : outgoingEdges) {
+        int fromSCC = entry.first;
+        for (int toSCC : entry.second) {
+            compressedGraph[fromSCC].push_back(toSCC);
         }
     }
 
@@ -94,6 +108,7 @@ vector<vector<int>> compressSCCs(int n, const vector<pair<int, int>>& edges,
 
     return compressedGraph;
 }
+
 
 void printSCC(const vector<int>& scc) {
     cout << "Strongly Connected Components:" << endl;
