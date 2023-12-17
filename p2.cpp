@@ -60,6 +60,17 @@ void dfsBackward(int node, const vector<vector<int>>& reversedGraph,
     }
 }
 
+void printGraph(const vector<vector<int>>& graph) {
+    cout << "Compressed Graph:" << endl;
+    for (std::vector<int>::size_type i = 1; i < graph.size(); ++i) {
+        cout << "SCC " << i << ": ";
+        for (int neighbor : graph[i]) {
+            cout << neighbor << " ";
+        }
+        cout << endl;
+    }
+}
+
 // Compress SCCs into a new graph
 vector<vector<int>> compressSCCs(int n, const vector<pair<int, int>>& edges,
                                  const vector<int>& scc) {
@@ -79,7 +90,24 @@ vector<vector<int>> compressSCCs(int n, const vector<pair<int, int>>& edges,
         }
     }
 
+    printGraph(compressedGraph);
+
     return compressedGraph;
+}
+
+void printSCC(const vector<int>& scc) {
+    cout << "Strongly Connected Components:" << endl;
+    int maxScc = *max_element(scc.begin(), scc.end());
+
+    for (int i = 1; i <= maxScc; ++i) {
+        cout << "SCC " << i << ": ";
+        for (std::vector<int>::size_type j = 0; j < scc.size(); ++j) {
+            if (scc[j] == i) {
+                cout << j << " ";
+            }
+        }
+        cout << endl;
+    }
 }
 
 // Find SCCs in the graph
@@ -122,6 +150,10 @@ vector<vector<int>> findSCCs(int n, const vector<pair<int, int>>& edges,
         }
     }
 
+    // Print SCCs
+    printSCC(scc);
+    
+
     // return the compressed graph of SCCs
     return compressSCCs(n, edges, scc);
 }
@@ -142,8 +174,6 @@ int dfs(int startNode, const vector<vector<int>>& graph, vector<bool>& visited) 
 
         int currentNode = currentPair.first;
         int jumps = currentPair.second;
-
-        maxJumps = max(maxJumps, jumps);
 
         // flag to check if there are unvisited neighbors
         bool unvisitedNeighborFound = false;
@@ -180,10 +210,13 @@ int calculateMaxJumps(int n, const vector<pair<int, int>>& edges) {
 
     // dfs traversal on the SCC graph to find the maximum jumps
     for (int startSCC = 1; startSCC <= sccCount; ++startSCC) {
+        printf("Start SCC: %d\n", startSCC);
         // keeps track of visited SCCs
         vector<bool> visited(sccCount + 1, false);
         // update maxJumps with the maximum jumps from the current SCC
+        printf("Max jumps 1: %d\n", maxJumps);
         maxJumps = max(maxJumps, dfs(startSCC, sccGraph, visited));
+        printf("Max jumps 2: %d\n", maxJumps);
     }
 
     return maxJumps;
